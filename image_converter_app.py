@@ -19,7 +19,8 @@ def resize_image_mobile_friendly(img):
         img = img.rotate(270, expand=True)
     
     # 🖼 Resize to fit within target portrait canvas
-    resized = ImageOps.contain(img, TARGET_SIZE)
+    smaller_target = (int(TARGET_SIZE[0] * 0.9), int(TARGET_SIZE[1] * 0.9))
+    resized = ImageOps.contain(img, smaller_target)
     
     # 🧾 Create white background and center resized image
     background = Image.new("RGB", TARGET_SIZE, (255, 255, 255))
