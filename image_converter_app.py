@@ -9,7 +9,7 @@ AB_IMAGE_SIZE = (680, 640)
 GRID_IMAGE_SIZE = (680, 640)
 
 st.title("Mobile-Friendly Image Converter")
-st.write("Choose to convert info images, ABCD-style stim images, or image grid sets into mobile-optimized format.")
+st.write("Choose to convert info images, ABCD-style stim images, image grid sets, or image highlights into mobile-optimized format.")
 
 # === RESIZE INFO IMAGE ===
 def resize_info_image(img):
@@ -17,6 +17,25 @@ def resize_info_image(img):
     if img.width > img.height:
         img = img.rotate(270, expand=True)
     resized = ImageOps.contain(img, (int(PORTRAIT_SIZE[0] * 0.9), int(PORTRAIT_SIZE[1] * 0.9)))
+    background = Image.new("RGB", PORTRAIT_SIZE, (255, 255, 255))
+    offset = ((PORTRAIT_SIZE[0] - resized.width) // 2, (PORTRAIT_SIZE[1] - resized.height) // 2)
+    background.paste(resized, offset)
+    return background
+
+# === RESIZE IMAGE HIGHLIGHT ===
+def resize_highlight_image(img):
+    img = img.convert("RGB")
+    # No rotation - keep original orientation
+    # Use smaller scale factor for landscape images to add more padding
+    if img.width > img.height:
+        # Landscape image - use more padding to prevent cutoff
+        scale_factor = 0.75
+    else:
+        # Portrait image - standard padding
+        scale_factor = 0.9
+    
+    target_size = (int(PORTRAIT_SIZE[0] * scale_factor), int(PORTRAIT_SIZE[1] * scale_factor))
+    resized = ImageOps.contain(img, target_size)
     background = Image.new("RGB", PORTRAIT_SIZE, (255, 255, 255))
     offset = ((PORTRAIT_SIZE[0] - resized.width) // 2, (PORTRAIT_SIZE[1] - resized.height) // 2)
     background.paste(resized, offset)
@@ -45,7 +64,12 @@ def resize_grid_image(img):
     return background
 
 # === MODE SELECT ===
-mode = st.radio("Choose mode:", ["Info image", "ABCD images (multiple)", "Image grid (multiple images)"])
+mode = st.radio("Choose mode:", [
+    "Info image", 
+    "Image highlight", 
+    "ABCD images (multiple)", 
+    "Image grid (multiple images)"
+])
 
 if mode == "Info image":
     uploaded_files = st.file_uploader("Upload image files", accept_multiple_files=True, type=['jpg', 'jpeg', 'png', 'webp'])
@@ -63,6 +87,30 @@ if mode == "Info image":
                 "Download Converted Info Images (ZIP)",
                 data=zip_buffer.getvalue(),
                 file_name="info_images.zip",
+                mime="application/zip"
+            )
+
+elif mode == "Image highlight":
+    uploaded_highlight_files = st.file_uploader(
+        "Upload image highlight files (landscape images get extra padding)",
+        accept_multiple_files=True,
+        type=['jpg', 'jpeg', 'png', 'webp'],
+        key="highlight"
+    )
+    if uploaded_highlight_files and st.button("Convert Image Highlights"):
+        with st.spinner("Converting..."):
+            zip_buffer = io.BytesIO()
+            with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+                for uploaded_file in uploaded_highlight_files:
+                    img = Image.open(uploaded_file)
+                    converted = resize_highlight_image(img)
+                    img_buffer = io.BytesIO()
+                    converted.save(img_buffer, "JPEG", quality=95)
+                    zip_file.writestr(f"{uploaded_file.name.rsplit('.', 1)[0]}_highlight.jpg", img_buffer.getvalue())
+            st.download_button(
+                "Download Image Highlights (ZIP)",
+                data=zip_buffer.getvalue(),
+                file_name="highlight_images.zip",
                 mime="application/zip"
             )
 
