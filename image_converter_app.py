@@ -7,9 +7,10 @@ import io
 PORTRAIT_SIZE = (680, 1280)
 AB_IMAGE_SIZE = (680, 640)
 GRID_IMAGE_SIZE = (680, 640)
+MOBILE_SAFE_CANVAS = (600, 1136)  # Safe for mobile view
 
 st.title("Mobile-Friendly Image Converter")
-st.write("Choose to convert info images, ABCD-style stim images, image grid sets, or image highlights into mobile-optimized format.")
+st.write("Choose to convert info images, ABCD-style stim images, image grid sets, image highlights, or mobile-safe images into mobile-optimized format.")
 
 # === RESIZE INFO IMAGE ===
 def resize_info_image(img):
@@ -63,12 +64,25 @@ def resize_grid_image(img):
     background.paste(resized, offset)
     return background
 
+# === RESIZE MOBILE-SAFE IMAGE ===
+def resize_mobile_safe(img):
+    img = img.convert("RGB")
+    scale_factor = 0.9
+    target_size = (int(MOBILE_SAFE_CANVAS[0] * scale_factor), int(MOBILE_SAFE_CANVAS[1] * scale_factor))
+    resized = ImageOps.contain(img, target_size)
+    background = Image.new("RGB", MOBILE_SAFE_CANVAS, (255, 255, 255))
+    offset = ((MOBILE_SAFE_CANVAS[0] - resized.width) // 2,
+              (MOBILE_SAFE_CANVAS[1] - resized.height) // 2)
+    background.paste(resized, offset)
+    return background
+
 # === MODE SELECT ===
 mode = st.radio("Choose mode:", [
     "Info image", 
     "Image highlight", 
     "ABCD images (multiple)", 
-    "Image grid (multiple images)"
+    "Image grid (multiple images)",
+    "Mobile-safe images"
 ])
 
 if mode == "Info image":
@@ -162,5 +176,31 @@ elif mode == "Image grid (multiple images)":
                 "Download Grid Images (ZIP)",
                 data=zip_buffer.getvalue(),
                 file_name="grid_images.zip",
+                mime="application/zip"
+            )
+
+elif mode == "Mobile-safe images":
+    uploaded_mobile_files = st.file_uploader(
+        "Upload image(s) for mobile-safe conversion (600x1136 canvas)",
+        accept_multiple_files=True,
+        type=['jpg', 'jpeg', 'png', 'webp'],
+        key="mobile_safe"
+    )
+    
+    if uploaded_mobile_files and st.button("Convert Mobile-Safe Images"):
+        with st.spinner("Converting..."):
+            zip_buffer = io.BytesIO()
+            with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+                for uploaded_file in uploaded_mobile_files:
+                    img = Image.open(uploaded_file)
+                    converted = resize_mobile_safe(img)
+                    img_buffer = io.BytesIO()
+                    converted.save(img_buffer, "JPEG", quality=95)
+                    filename = f"{uploaded_file.name.rsplit('.', 1)[0]}_anon_web.jpg"
+                    zip_file.writestr(filename, img_buffer.getvalue())
+            st.download_button(
+                "Download Mobile-Safe Images (ZIP)",
+                data=zip_buffer.getvalue(),
+                file_name="Anon_Web_Images.zip",
                 mime="application/zip"
             )
