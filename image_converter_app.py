@@ -7,7 +7,7 @@ import io
 PORTRAIT_SIZE = (680, 1280)
 AB_IMAGE_SIZE = (680, 640)
 GRID_IMAGE_SIZE = (680, 640)
-MOBILE_SAFE_CANVAS = (600, 1136)  # Safe for mobile view
+ANON_IMAGES = (600, 1136)  # Safe for mobile view
 
 st.title("Mobile-Friendly Image Converter")
 st.write("Choose to convert info images, ABCD-style stim images, image grid sets, image highlights, or mobile-safe images into mobile-optimized format.")
