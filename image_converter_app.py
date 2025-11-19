@@ -9,6 +9,10 @@ AB_IMAGE_SIZE = (680, 640)
 GRID_IMAGE_SIZE = (680, 640)
 MOBILE_SAFE_CANVAS = (600, 1136)  # Safe for mobile view
 
+# Initialize session state for storing converted files
+if 'converted_files' not in st.session_state:
+    st.session_state.converted_files = {}
+
 st.title("Mobile-Friendly Image Converter")
 st.write("Choose to convert info images, ABCD-style stim images, image grid sets, image highlights, or mobile-safe images into mobile-optimized format.")
 
@@ -97,12 +101,23 @@ if mode == "Info image":
                     img_buffer = io.BytesIO()
                     converted.save(img_buffer, "JPEG", quality=95)
                     zip_file.writestr(f"{uploaded_file.name.rsplit('.', 1)[0]}_info.jpg", img_buffer.getvalue())
-            st.download_button(
-                "Download Converted Info Images (ZIP)",
-                data=zip_buffer.getvalue(),
-                file_name="info_images.zip",
-                mime="application/zip"
-            )
+            
+            # Store in session state
+            st.session_state.converted_files['info_images'] = {
+                'data': zip_buffer.getvalue(),
+                'filename': 'info_images.zip',
+                'label': 'Info Images'
+            }
+    
+    # Display download button if files exist in session state
+    if 'info_images' in st.session_state.converted_files:
+        st.success("✓ Info images converted!")
+        st.download_button(
+            "Download Converted Info Images (ZIP)",
+            data=st.session_state.converted_files['info_images']['data'],
+            file_name=st.session_state.converted_files['info_images']['filename'],
+            mime="application/zip"
+        )
 
 elif mode == "Image highlight":
     uploaded_highlight_files = st.file_uploader(
@@ -121,12 +136,23 @@ elif mode == "Image highlight":
                     img_buffer = io.BytesIO()
                     converted.save(img_buffer, "JPEG", quality=95)
                     zip_file.writestr(f"{uploaded_file.name.rsplit('.', 1)[0]}_highlight.jpg", img_buffer.getvalue())
-            st.download_button(
-                "Download Image Highlights (ZIP)",
-                data=zip_buffer.getvalue(),
-                file_name="highlight_images.zip",
-                mime="application/zip"
-            )
+            
+            # Store in session state
+            st.session_state.converted_files['highlight_images'] = {
+                'data': zip_buffer.getvalue(),
+                'filename': 'highlight_images.zip',
+                'label': 'Image Highlights'
+            }
+    
+    # Display download button if files exist in session state
+    if 'highlight_images' in st.session_state.converted_files:
+        st.success("✓ Image highlights converted!")
+        st.download_button(
+            "Download Image Highlights (ZIP)",
+            data=st.session_state.converted_files['highlight_images']['data'],
+            file_name=st.session_state.converted_files['highlight_images']['filename'],
+            mime="application/zip"
+        )
 
 elif mode == "ABCD images (multiple)":
     uploaded_abcd_files = st.file_uploader(
@@ -147,12 +173,23 @@ elif mode == "ABCD images (multiple)":
                     converted.save(img_buffer, "JPEG", quality=95)
                     filename = f"{uploaded_file.name.rsplit('.', 1)[0]}_abcd.jpg"
                     zip_file.writestr(filename, img_buffer.getvalue())
-            st.download_button(
-                "Download ABCD Images (ZIP)",
-                data=zip_buffer.getvalue(),
-                file_name="abcd_images.zip",
-                mime="application/zip"
-            )
+            
+            # Store in session state
+            st.session_state.converted_files['abcd_images'] = {
+                'data': zip_buffer.getvalue(),
+                'filename': 'abcd_images.zip',
+                'label': 'ABCD Images'
+            }
+    
+    # Display download button if files exist in session state
+    if 'abcd_images' in st.session_state.converted_files:
+        st.success("✓ ABCD images converted!")
+        st.download_button(
+            "Download ABCD Images (ZIP)",
+            data=st.session_state.converted_files['abcd_images']['data'],
+            file_name=st.session_state.converted_files['abcd_images']['filename'],
+            mime="application/zip"
+        )
 
 elif mode == "Image grid (multiple images)":
     uploaded_grid_files = st.file_uploader(
@@ -172,12 +209,23 @@ elif mode == "Image grid (multiple images)":
                     img_buffer = io.BytesIO()
                     converted.save(img_buffer, "JPEG", quality=95)
                     zip_file.writestr(f"{uploaded_file.name.rsplit('.', 1)[0]}_grid.jpg", img_buffer.getvalue())
-            st.download_button(
-                "Download Grid Images (ZIP)",
-                data=zip_buffer.getvalue(),
-                file_name="grid_images.zip",
-                mime="application/zip"
-            )
+            
+            # Store in session state
+            st.session_state.converted_files['grid_images'] = {
+                'data': zip_buffer.getvalue(),
+                'filename': 'grid_images.zip',
+                'label': 'Grid Images'
+            }
+    
+    # Display download button if files exist in session state
+    if 'grid_images' in st.session_state.converted_files:
+        st.success("✓ Grid images converted!")
+        st.download_button(
+            "Download Grid Images (ZIP)",
+            data=st.session_state.converted_files['grid_images']['data'],
+            file_name=st.session_state.converted_files['grid_images']['filename'],
+            mime="application/zip"
+        )
 
 elif mode == "Mobile-safe images":
     uploaded_mobile_files = st.file_uploader(
@@ -198,9 +246,43 @@ elif mode == "Mobile-safe images":
                     converted.save(img_buffer, "JPEG", quality=95)
                     filename = f"{uploaded_file.name.rsplit('.', 1)[0]}_anon_web.jpg"
                     zip_file.writestr(filename, img_buffer.getvalue())
+            
+            # Store in session state
+            st.session_state.converted_files['mobile_safe_images'] = {
+                'data': zip_buffer.getvalue(),
+                'filename': 'Anon_Web_Images.zip',
+                'label': 'Mobile-Safe Images'
+            }
+    
+    # Display download button if files exist in session state
+    if 'mobile_safe_images' in st.session_state.converted_files:
+        st.success("✓ Mobile-safe images converted!")
+        st.download_button(
+            "Download Mobile-Safe Images (ZIP)",
+            data=st.session_state.converted_files['mobile_safe_images']['data'],
+            file_name=st.session_state.converted_files['mobile_safe_images']['filename'],
+            mime="application/zip"
+        )
+
+# === SHOW ALL CONVERTED FILES ===
+if st.session_state.converted_files:
+    st.divider()
+    st.subheader("📦 All Converted Files")
+    st.write("All your converted files are available below:")
+    
+    for key, file_info in st.session_state.converted_files.items():
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.write(f"**{file_info['label']}**")
+        with col2:
             st.download_button(
-                "Download Mobile-Safe Images (ZIP)",
-                data=zip_buffer.getvalue(),
-                file_name="Anon_Web_Images.zip",
-                mime="application/zip"
+                "Download",
+                data=file_info['data'],
+                file_name=file_info['filename'],
+                mime="application/zip",
+                key=f"download_{key}"
             )
+    
+    if st.button("Clear All Converted Files"):
+        st.session_state.converted_files = {}
+        st.rerun()
