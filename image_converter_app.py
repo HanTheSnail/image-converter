@@ -71,14 +71,24 @@ def resize_grid_image(img):
 # === RESIZE MOBILE-SAFE IMAGE ===
 def resize_mobile_safe(img):
     img = img.convert("RGB")
-    scale_factor = 0.9
-    target_size = (int(MOBILE_SAFE_CANVAS[0] * scale_factor), int(MOBILE_SAFE_CANVAS[1] * scale_factor))
-    resized = ImageOps.contain(img, target_size)
+
+    pad_x = int(MOBILE_SAFE_CANVAS[0] * MOBILE_SAFE_PADDING_PCT)
+    pad_y = int(MOBILE_SAFE_CANVAS[1] * MOBILE_SAFE_PADDING_PCT)
+    inner = (
+        MOBILE_SAFE_CANVAS[0] - pad_x * 2,
+        MOBILE_SAFE_CANVAS[1] - pad_y * 2,
+    )
+
+    resized = ImageOps.contain(img, inner, method=Image.LANCZOS)
+
     background = Image.new("RGB", MOBILE_SAFE_CANVAS, (255, 255, 255))
-    offset = ((MOBILE_SAFE_CANVAS[0] - resized.width) // 2,
-              (MOBILE_SAFE_CANVAS[1] - resized.height) // 2)
+    offset = (
+        (MOBILE_SAFE_CANVAS[0] - resized.width) // 2,
+        (MOBILE_SAFE_CANVAS[1] - resized.height) // 2,
+    )
     background.paste(resized, offset)
     return background
+
 
 # === MODE SELECT ===
 mode = st.radio("Choose mode:", [
@@ -229,7 +239,7 @@ elif mode == "Image grid (multiple images)":
 
 elif mode == "Mobile-safe images":
     uploaded_mobile_files = st.file_uploader(
-        "Upload image(s) for mobile-safe conversion (600x1136 canvas)",
+        "Upload image(s) for mobile-safe conversion (800x1000 canvas)",
         accept_multiple_files=True,
         type=['jpg', 'jpeg', 'png', 'webp'],
         key="mobile_safe"
