@@ -98,7 +98,7 @@ mode = st.radio("Choose mode:", [
     "Image highlight", 
     "ABCD images (multiple)", 
     "Image grid (multiple images)",
-    "Mobile-safe images"
+    "Mobile-safe images",
     "Multi-choice conversion"
 
 ])
