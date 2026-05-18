@@ -7,7 +7,9 @@ import io
 PORTRAIT_SIZE = (680, 1280)
 AB_IMAGE_SIZE = (680, 640)
 GRID_IMAGE_SIZE = (680, 640)
-MOBILE_SAFE_CANVAS = (600, 1136)  # Safe for mobile view
+MOBILE_SAFE_CANVAS = (800, 1000)
+MOBILE_SAFE_PADDING_PCT = 0.15
+
 
 # Initialize session state for storing converted files
 if 'converted_files' not in st.session_state:
