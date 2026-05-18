@@ -99,6 +99,8 @@ mode = st.radio("Choose mode:", [
     "ABCD images (multiple)", 
     "Image grid (multiple images)",
     "Mobile-safe images"
+    "Multi-choice conversion"
+
 ])
 
 if mode == "Info image":
@@ -275,6 +277,83 @@ elif mode == "Mobile-safe images":
             file_name=st.session_state.converted_files['mobile_safe_images']['filename'],
             mime="application/zip"
         )
+elif mode == "Multi-choice conversion":
+    conversion_presets = {
+        "Info image": {
+            "resize": resize_info_image,
+            "suffix": "info",
+            "folder": "info_images",
+        },
+        "Image highlight": {
+            "resize": resize_highlight_image,
+            "suffix": "highlight",
+            "folder": "highlight_images",
+        },
+        "ABCD image": {
+            "resize": resize_ab_image,
+            "suffix": "abcd",
+            "folder": "abcd_images",
+        },
+        "Image grid": {
+            "resize": resize_grid_image,
+            "suffix": "grid",
+            "folder": "grid_images",
+        },
+        "Mobile-safe image": {
+            "resize": resize_mobile_safe,
+            "suffix": "anon_web",
+            "folder": "mobile_safe_images",
+        },
+    }
+
+    uploaded_multi_files = st.file_uploader(
+        "Upload image(s) once, then choose all conversions needed",
+        accept_multiple_files=True,
+        type=["jpg", "jpeg", "png", "webp"],
+        key="multi_choice"
+    )
+
+    selected_conversions = st.multiselect(
+        "Choose conversion outputs",
+        options=list(conversion_presets.keys()),
+        default=["Info image", "Image highlight"]
+    )
+
+    if uploaded_multi_files and selected_conversions and st.button("Convert Selected Outputs"):
+        with st.spinner("Converting..."):
+            zip_buffer = io.BytesIO()
+
+            with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+                for uploaded_file in uploaded_multi_files:
+                    file_base = uploaded_file.name.rsplit(".", 1)[0]
+                    source_bytes = uploaded_file.getvalue()
+
+                    for conversion_name in selected_conversions:
+                        preset = conversion_presets[conversion_name]
+                        img = Image.open(io.BytesIO(source_bytes))
+                        converted = preset["resize"](img)
+
+                        img_buffer = io.BytesIO()
+                        converted.save(img_buffer, "JPEG", quality=95)
+
+                        filename = f"{preset['folder']}/{file_base}_{preset['suffix']}.jpg"
+                        zip_file.writestr(filename, img_buffer.getvalue())
+
+            st.session_state.converted_files["multi_choice_images"] = {
+                "data": zip_buffer.getvalue(),
+                "filename": "multi_choice_converted_images.zip",
+                "label": "Multi-choice Converted Images"
+            }
+
+    if "multi_choice_images" in st.session_state.converted_files:
+        st.success("Multi-choice images converted!")
+        st.download_button(
+            "Download Multi-choice Converted Images (ZIP)",
+            data=st.session_state.converted_files["multi_choice_images"]["data"],
+            file_name=st.session_state.converted_files["multi_choice_images"]["filename"],
+            mime="application/zip"
+        )
+        
 
 # === SHOW ALL CONVERTED FILES ===
 if st.session_state.converted_files:
